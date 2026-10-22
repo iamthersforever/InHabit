@@ -1,0 +1,68 @@
+# Dependency directories (CRITICAL: Never commit node_modules to GitHub)
+node_modules/
+*/node_modules/
+*/*/node_modules/
+*/*/*/node_modules/
+
+# Local databases & binary data engines
+.mongo_data/
+server/.mongo_data/
+**/.mongo_data/
+
+# Build and distribution directories
+dist/
+client/dist/
+java-bridge/frontend/dist/
+out/
+out-web/
+java-bridge/java/out-web/
+**/out/
+**/out-web/
+
+# Compiled Java bytecode (source files and InHabit.jar are retained)
+*.class
+bin/
+
+# Environment variables & local credentials
+.env
+.env.*
+server/.env
+server/.env.*
+!.env.example
+!server/.env.example
+
+# Logs and runtime artifacts
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+server/logs/*
+!server/logs/.gitkeep
+java-bridge/java/webbridge_test.log
+
+# Uploads directory (retain placeholder only)
+server/uploads/*
+!server/uploads/.gitkeep
+
+# macOS & OS junk files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+__MACOSX/
+
+# IDE & Editor caches
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Large archives and temporary files
+*.zip
+*.tar.gz
+*.tgz
+!dependencies/offline-archives/*.tgz

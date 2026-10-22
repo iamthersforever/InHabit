@@ -1,0 +1,26 @@
+pipeline {
+  agent any
+  options { timestamps() }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Install dependencies') {
+      steps {
+        sh 'node --version'
+        sh 'npm --version'
+        sh 'npm install'
+      }
+    }
+    stage('Backend validation tests') {
+      steps { sh 'npm test' }
+    }
+    stage('Build responsive React app') {
+      steps { sh 'npm run build' }
+    }
+  }
+  post {
+    success { echo 'InHabit FCC checks and frontend production build passed.' }
+    failure { echo 'A test or build step failed. Review the console output above.' }
+  }
+}

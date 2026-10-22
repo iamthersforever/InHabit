@@ -1,0 +1,75 @@
+{
+  "info": {
+    "_postman_id": "7d9f4fa7-8f58-4ad2-a9c5-inhabitfcc001",
+    "name": "InHabit FCC — Full Stack API",
+    "description": "API checks for the InHabit Full Stack Development Flexi Credit Course app. Run Login requests to populate {{token}} before protected routes. To test role-protected requests, run Login — Admin or Login — Technician before that group of requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" },
+    { "key": "complaintId", "value": "" },
+    { "key": "technicianId", "value": "" },
+    { "key": "lostFoundId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        { "name": "API health", "request": { "method": "GET", "url": "{{baseUrl}}/api/health" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('API is running', function () { pm.response.to.have.status(200); });"] } }] },
+        { "name": "Database health", "request": { "method": "GET", "url": "{{baseUrl}}/api/health/db" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('MongoDB is connected', function () { pm.response.to.have.status(200); });"] } }] }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register student (optional test)",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"name\": \"Demo Resident\",\n  \"email\": \"new.resident@inhabit.demo\",\n  \"password\": \"resident123\",\n  \"prn\": \"FCC-NEW-01\",\n  \"block\": \"Beta\",\n  \"room\": \"204\",\n  \"wing\": \"B\"\n}" }, "url": "{{baseUrl}}/api/auth/register" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('token', pm.response.json().token); }", "pm.test('Registration completed or reports a duplicate cleanly', function () { pm.expect([201, 409]).to.include(pm.response.code); });"] } }]
+        },
+        {
+          "name": "Login — Student",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"raghav.sarda@inhabit.demo\",\n  \"password\": \"student123\"\n}" }, "url": "{{baseUrl}}/api/auth/login" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Student login succeeds', function () { pm.response.to.have.status(200); });", "pm.collectionVariables.set('token', pm.response.json().token);"] } }]
+        },
+        {
+          "name": "Login — Admin",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@inhabit.demo\",\n  \"password\": \"admin123\"\n}" }, "url": "{{baseUrl}}/api/auth/login" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Admin login succeeds', function () { pm.response.to.have.status(200); });", "pm.collectionVariables.set('token', pm.response.json().token);"] } }]
+        },
+        {
+          "name": "Login — Technician",
+          "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"email\": \"technician@inhabit.demo\",\n  \"password\": \"tech123\"\n}" }, "url": "{{baseUrl}}/api/auth/login" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Technician login succeeds', function () { pm.response.to.have.status(200); });", "pm.collectionVariables.set('token', pm.response.json().token);"] } }]
+        },
+        { "name": "Current user", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/auth/me" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Current user is returned', function () { pm.response.to.have.status(200); });"] } }] }
+      ]
+    },
+    {
+      "name": "Grievances",
+      "item": [
+        { "name": "List grievances", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/complaints" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Grievance list loads', function () { pm.response.to.have.status(200); });", "const data = pm.response.json(); if (data.complaints && data.complaints.length) pm.collectionVariables.set('complaintId', data.complaints[0].id || data.complaints[0]._id);"] } }] },
+        {
+          "name": "Create grievance — Student",
+          "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Water pressure is low on floor 2\",\n  \"description\": \"The taps have very low water pressure throughout the morning and it is difficult to use the washrooms.\",\n  \"category\": \"Water\",\n  \"location\": \"Beta · Floor 2\",\n  \"isAnonymous\": false\n}" }, "url": "{{baseUrl}}/api/complaints" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Grievance created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('complaintId', pm.response.json().complaint.id || pm.response.json().complaint._id);"] } }]
+        },
+        { "name": "Support grievance — Student (not own)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/complaints/{{complaintId}}/vote" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Vote is accepted or duplicate/self-vote is safely rejected', function () { pm.expect([200, 400, 409]).to.include(pm.response.code); });"] } }] },
+        { "name": "Update status — Admin or assigned Technician", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"status\": \"In Progress\",\n  \"note\": \"Technician has started the inspection.\"\n}" }, "url": "{{baseUrl}}/api/complaints/{{complaintId}}/status" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Status changes or role restriction is enforced', function () { pm.expect([200, 403, 404]).to.include(pm.response.code); });"] } }] },
+        { "name": "List technicians — Admin", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/dashboard/technicians" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if (pm.response.code === 200) { const list = pm.response.json().technicians || []; if (list.length) pm.collectionVariables.set('technicianId', list[0].id || list[0]._id); }", "pm.test('Technicians are listed or admin-only restriction is enforced', function () { pm.expect([200, 403]).to.include(pm.response.code); });"] } }] },
+        { "name": "Assign grievance — Admin", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"technicianId\": \"{{technicianId}}\"\n}" }, "url": "{{baseUrl}}/api/complaints/{{complaintId}}/assign" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Assignment or role/data validation handled', function () { pm.expect([200, 400, 403, 404]).to.include(pm.response.code); });"] } }] },
+        { "name": "Dashboard aggregation stats", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/dashboard/stats" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Dashboard stats aggregate successfully', function () { pm.response.to.have.status(200); });"] } }] }
+      ]
+    },
+    {
+      "name": "Lost & Found",
+      "item": [
+        { "name": "List notices", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/lost-found" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Lost-and-found notices load', function () { pm.response.to.have.status(200); });", "const data = pm.response.json(); if (data.items && data.items.length) pm.collectionVariables.set('lostFoundId', data.items[0].id || data.items[0]._id);"] } }] },
+        { "name": "Create notice — Student", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"itemName\": \"Silver keychain\",\n  \"itemType\": \"Found\",\n  \"description\": \"A small silver keychain was found near the campus cafe.\",\n  \"location\": \"Campus cafe\",\n  \"contactNote\": \"Message through the campus desk.\"\n}" }, "url": "{{baseUrl}}/api/lost-found" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Lost-and-found notice created', function () { pm.response.to.have.status(201); });", "pm.collectionVariables.set('lostFoundId', pm.response.json().item.id || pm.response.json().item._id);"] } }] },
+        { "name": "Claim notice", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/lost-found/{{lostFoundId}}/claim" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Claim updates state or safely rejects the reporter/already resolved item', function () { pm.expect([200, 400, 404, 409]).to.include(pm.response.code); });"] } }] },
+        { "name": "Mark returned", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }], "url": "{{baseUrl}}/api/lost-found/{{lostFoundId}}/returned" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Return flow updates or enforces ownership', function () { pm.expect([200, 403, 404]).to.include(pm.response.code); });"] } }] }
+      ]
+    }
+  ]
+}
